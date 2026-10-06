@@ -1,0 +1,58 @@
+# IronPulse Fitness & Gym Management System — .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Database files (SQLite — regenerated on first run via db.init_db())
+db/ironpulse.db
+*.db
+*.sqlite3
+
+# User uploaded photos (not committed, stored at runtime)
+frontend/static/uploads/*
+!frontend/static/uploads/.gitkeep
+
+# Environment & secrets
+.env
+.env.*
+*.env
+
+# IDE & Editor
+.vscode/
+.idea/
+*.code-workspace
+*.suo
+*.user
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Vercel build cache
+.vercel/
+
+# Logs
+*.log
+logs/
+
+# Temp & Cache
+*.tmp
+*.bak
+*.swp
+*.swo

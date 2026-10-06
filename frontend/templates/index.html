@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}IronPulse Fitness | Elite Gym, Subscriptions & Supplements{% endblock %}
+
+{% block content %}
+<!-- Hero Section with Background Video -->
+<section class="hero-section">
+  <div class="hero-video-wrapper">
+    <!-- Free High Quality Athletic Gym Loop Video -->
+    <video class="hero-video" autoplay muted loop playsinline poster="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=80">
+      <source src="https://assets.mixkit.co/videos/preview/mixkit-athlete-working-out-with-heavy-ropes-in-a-gym-44160-large.mp4" type="video/mp4">
+      <source src="https://assets.mixkit.co/videos/preview/mixkit-man-training-with-a-punching-bag-44158-large.mp4" type="video/mp4">
+    </video>
+    <div class="hero-overlay"></div>
+  </div>
+
+  <div class="container hero-content">
+    <div class="hero-tag">
+      <i class="fa-solid fa-fire"></i> THE ULTIMATE FITNESS SANCTUARY
+    </div>
+
+    <h1 class="hero-title">
+      UNLEASH YOUR <br>
+      <span class="text-gradient">TITAN STRENGTH</span>
+    </h1>
+
+    <p class="hero-desc">
+      State-of-the-art powerlifting zones, premium international cardio equipment, certified elite coaches, and India’s premier supplement store. Start your transformation today.
+    </p>
+
+    <div class="hero-btns">
+      <a href="{{ url_for('plans') }}" class="btn btn-primary">
+        <i class="fa-solid fa-bolt"></i> View Subscription Plans
+      </a>
+      <a href="{{ url_for('shop') }}" class="btn btn-outline">
+        <i class="fa-solid fa-bottle-droplet"></i> Shop 40+ Supplements
+      </a>
+      <a href="#bmiSection" class="btn btn-sm" style="background: rgba(255,255,255,0.06); color: #fff;">
+        <i class="fa-solid fa-calculator"></i> Calculate BMI
+      </a>
+    </div>
+
+    <!-- Hero Quick Stats -->
+    <div class="hero-stats">
+      <div class="stat-item">
+        <h3>15,000+</h3>
+        <p>Active Members</p>
+      </div>
+      <div class="stat-item">
+        <h3>40+</h3>
+        <p>Pro Supplements</p>
+      </div>
+      <div class="stat-item">
+        <h3>45+</h3>
+        <p>Elite Coaches</p>
+      </div>
+      <div class="stat-item">
+        <h3 style="color: var(--accent-gold);">4.9 ★</h3>
+        <p>Google Rating</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Special Deals & Subscription Plans Preview -->
+<section class="section-padding">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-sub">Flexible Memberships</span>
+      <h2 class="section-title">CHOOSE YOUR SUBSCRIPTION</h2>
+      <p class="section-desc">From special Student and Couple discounts to VIP Athlete passes, find the ideal plan for your fitness journey.</p>
+    </div>
+
+    <div class="plans-grid">
+      {% for p in plans[:3] %}
+        <div class="plan-card {% if p.is_special_offer %}special-deal{% endif %}">
+          {% if p.offer_tag %}
+            <div class="plan-ribbon">{{ p.offer_tag }}</div>
+          {% endif %}
+
+          <div class="plan-header">
+            <span class="plan-tag">
+              {% if p.plan_code == 'STUDENT_OFFER' %}
+                <i class="fa-solid fa-graduation-cap"></i> Student Special
+              {% elif p.plan_code == 'COUPLE_OFFER' %}
+                <i class="fa-solid fa-heart"></i> Couple Duo Deal
+              {% else %}
+                <i class="fa-solid fa-dumbbell"></i> Standard Membership
+              {% endif %}
+            </span>
+            <h3 class="plan-title">{{ p.name }}</h3>
+            <p class="plan-desc">{{ p.description }}</p>
+          </div>
+
+          <div class="plan-pricing">
+            <span class="plan-price-currency">₹</span>
+            <span class="plan-price">{{ "{:,.0f}".format(p.price) }}</span>
+            <span class="plan-duration">/ {{ p.duration_days }} Days</span>
+            {% if p.original_price %}
+              <span class="plan-original-price">₹{{ "{:,.0f}".format(p.original_price) }}</span>
+            {% endif %}
+          </div>
+
+          <ul class="plan-features">
+            {% for f in p.features.split(',') %}
+              <li><i class="fa-solid fa-circle-check"></i> {{ f.strip() }}</li>
+            {% endfor %}
+          </ul>
+
+          {% if current_user %}
+            <form action="{{ url_for('subscribe') }}" method="POST">
+              <input type="hidden" name="plan_id" value="{{ p.id }}">
+              {% if p.plan_code == 'COUPLE_OFFER' %}
+                <input type="text" name="notes" class="form-control" placeholder="Partner's Full Name & Phone" style="margin-bottom: 0.75rem;" required>
+              {% elif p.plan_code == 'STUDENT_OFFER' %}
+                <input type="text" name="notes" class="form-control" placeholder="College Name & Student ID" style="margin-bottom: 0.75rem;" required>
+              {% endif %}
+              <button type="submit" class="btn {% if p.is_special_offer %}btn-gold{% else %}btn-primary{% endif %}" style="width: 100%;">
+                Enroll Now
+              </button>
+            </form>
+          {% else %}
+            <a href="{{ url_for('login') }}?next={{ url_for('plans') }}" class="btn {% if p.is_special_offer %}btn-gold{% else %}btn-primary{% endif %}" style="width: 100%;">
+              Log In to Subscribe
+            </a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div style="text-align: center; margin-top: 3rem;">
+      <a href="{{ url_for('plans') }}" class="btn btn-outline">
+        View All 6 Subscription Plans & VIP Athlete Passes <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Interactive Real-Time BMI Calculator Section -->
+<section class="section-padding" id="bmiSection" style="background: var(--bg-secondary); position: relative;">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-sub">Scientific Body Metrics</span>
+      <h2 class="section-title">CALCULATE YOUR BMI & GOALS</h2>
+      <p class="section-desc">Instant Body Mass Index (BMI) assessment using WHO standards. Find your ideal weight range and nutrition recommendations.</p>
+    </div>
+
+    <div class="bmi-calculator-box">
+      <div class="bmi-grid">
+        <!-- Input Form -->
+        <div>
+          <h3 style="font-size: 1.4rem; margin-bottom: 1.5rem;"><i class="fa-solid fa-calculator" style="color: var(--accent-red);"></i> Enter Your Measurements</h3>
+          
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Height (in Centimeters)</label>
+              <div style="position: relative;">
+                <input type="number" id="calcHeight" class="form-control" value="175" min="100" max="250" placeholder="175">
+                <span style="position: absolute; right: 15px; top: 12px; color: var(--text-muted); font-size: 0.85rem; font-weight: 700;">CM</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Weight (in Kilograms)</label>
+              <div style="position: relative;">
+                <input type="number" id="calcWeight" class="form-control" value="72" min="30" max="250" placeholder="72">
+                <span style="position: absolute; right: 15px; top: 12px; color: var(--text-muted); font-size: 0.85rem; font-weight: 700;">KG</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.5rem; padding: 1.25rem; background: rgba(10, 12, 16, 0.6); border-radius: 14px; border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+              <span style="color: var(--text-muted);">Ideal Weight Range:</span>
+              <strong id="bmiIdeal" style="color: #fff;">56.7 - 76.3 kg</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+              <span style="color: var(--text-muted);">Recommended Daily Water:</span>
+              <strong id="bmiWater" style="color: var(--accent-cyan);">2.5 Liters/day</strong>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.5rem;">
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">
+              <i class="fa-solid fa-user-plus"></i> Save to My Fitness Profile
+            </a>
+          </div>
+        </div>
+
+        <!-- Real-time Meter Display -->
+        <div class="bmi-meter-wrapper">
+          <div style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Your Calculated BMI</div>
+          <div class="bmi-value-display" id="bmiVal">23.5</div>
+          <div id="bmiCategory" class="badge badge-success">Normal Weight</div>
+
+          <div class="bmi-bar-container">
+            <div class="bmi-bar-seg bmi-seg-under" title="Underweight (< 18.5)"></div>
+            <div class="bmi-bar-seg bmi-seg-normal" title="Normal (18.5 - 24.9)"></div>
+            <div class="bmi-bar-seg bmi-seg-over" title="Overweight (25 - 29.9)"></div>
+            <div class="bmi-bar-seg bmi-seg-obese" title="Obese (>= 30)"></div>
+          </div>
+
+          <p id="bmiRecommendation" style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; margin-top: 1rem;">
+            Excellent physical conditioning! Keep focusing on muscle hypertrophy, recovery, and pure whey protein.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Products Section (From the 40 Gym Products) -->
+<section class="section-padding">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-sub">IronPulse Pro Store</span>
+      <h2 class="section-title">FEATURED SUPPLEMENTS & GEAR</h2>
+      <p class="section-desc">Browse our curated selection of 100% authentic Whey Isolates, Pre-Workouts, Creatine, and heavy-duty Powerlifting Belts.</p>
+    </div>
+
+    <div class="products-grid">
+      {% for prod in featured_products %}
+        <div class="product-card">
+          <div class="product-thumb">
+            <img src="{{ prod.image_url }}" alt="{{ prod.name }}">
+            <span class="product-brand-tag">{{ prod.brand }}</span>
+            <span class="product-rating"><i class="fa-solid fa-star"></i> {{ prod.rating }}</span>
+          </div>
+
+          <div class="product-body">
+            <h4 class="product-title">{{ prod.name }}</h4>
+            <div class="product-specs">{{ prod.serving_specs or prod.flavor_variant }}</div>
+
+            <div class="product-footer">
+              <div class="product-price-box">
+                <span class="product-price">₹{{ "{:,.0f}".format(prod.price) }}</span>
+                {% if prod.original_price %}
+                  <span class="product-old-price">₹{{ "{:,.0f}".format(prod.original_price) }}</span>
+                {% endif %}
+              </div>
+
+              <button type="button" class="btn-add-cart" onclick="addToCart({{ prod.id }}, '{{ prod.name | escape }}', {{ prod.price }}, '{{ prod.image_url }}')" title="Add to Cart">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div style="text-align: center; margin-top: 3.5rem;">
+      <a href="{{ url_for('shop') }}" class="btn btn-primary">
+        Explore Complete 40+ Products Catalog <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Facility Highlights -->
+<section class="section-padding" style="background: var(--bg-secondary);">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-sub">World Class Training</span>
+      <h2 class="section-title">WHY IRONPULSE?</h2>
+      <p class="section-desc">Built for athletes, lifters, and everyday champions committed to unlocking peak performance.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+      <div class="glass-card">
+        <i class="fa-solid fa-dumbbell" style="font-size: 2.5rem; color: var(--accent-red); margin-bottom: 1.25rem;"></i>
+        <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem;">Olympic Lifting Platforms</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">Competition Eleiko bars, calibrated steel plates, drop platforms, and specialized power cages for heavy training.</p>
+      </div>
+
+      <div class="glass-card">
+        <i class="fa-solid fa-clock-rotate-left" style="font-size: 2.5rem; color: var(--accent-gold); margin-bottom: 1.25rem;"></i>
+        <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem;">Live Membership Tracking</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">Real-time subscription countdown timer down to the exact second so you never miss workout days.</p>
+      </div>
+
+      <div class="glass-card">
+        <i class="fa-solid fa-apple-whole" style="font-size: 2.5rem; color: var(--accent-green); margin-bottom: 1.25rem;"></i>
+        <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem;">Certified Nutrition Counsel</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">Customized macro plans, supplement guides, and body composition analysis for guaranteed physical transformation.</p>
+      </div>
+
+      <div class="glass-card">
+        <i class="fa-solid fa-hot-tub-person" style="font-size: 2.5rem; color: var(--accent-cyan); margin-bottom: 1.25rem;"></i>
+        <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem;">Steam, Sauna & Recovery</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">Deep tissue recovery amenities, infrared sauna, ice baths, and luxury showers included in Titan & VIP memberships.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    setupBmiCalculator("calcHeight", "calcWeight", "bmi");
+  });
+</script>
+{% endblock %}

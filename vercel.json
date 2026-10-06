@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "name": "ironpulse-fitness",
+  "builds": [
+    {
+      "src": "run.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/frontend/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "run.py"
+    }
+  ],
+  "env": {
+    "USE_ORACLE": "False",
+    "DB_PATH": "/tmp/ironpulse.db",
+    "UPLOAD_FOLDER": "/tmp/uploads",
+    "SECRET_KEY": "ironpulse_titan_super_secret_key_2026"
+  }
+}

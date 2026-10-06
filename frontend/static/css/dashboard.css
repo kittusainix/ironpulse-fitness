@@ -1,0 +1,523 @@
+/* ==========================================================================
+   IRONPULSE FITNESS - DASHBOARD & ADMIN STYLING
+   ========================================================================== */
+
+.dashboard-layout {
+  padding: 100px 0 60px 0;
+}
+
+/* User Profile Header */
+.profile-hero-card {
+  background: linear-gradient(135deg, rgba(18, 22, 32, 0.95), rgba(26, 32, 46, 0.98));
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 2.5rem;
+  margin-bottom: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-hero-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 51, 68, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.profile-user-info {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.profile-avatar-wrapper {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 3px solid var(--accent-red);
+  box-shadow: 0 0 25px var(--accent-red-glow);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.profile-avatar-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-details h2 {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+.profile-meta-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.meta-chip {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.3rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Dashboard Cards Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Subscription Hero Box ("Kitna time bacha hai") */
+.subscription-clock-card {
+  background: linear-gradient(135deg, rgba(26, 32, 46, 0.9), rgba(18, 22, 32, 0.95));
+  border: 1px solid var(--border-glow);
+  border-radius: 24px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+.subscription-plan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.subscription-plan-header h3 {
+  font-size: 1.5rem;
+}
+
+.countdown-wrapper {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.countdown-digits {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(0.35rem, 1.5vw, 1.25rem);
+  margin-bottom: 1.5rem;
+}
+
+.countdown-box {
+  background: #0a0c10;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: clamp(0.75rem, 2vw, 1.25rem) clamp(0.35rem, 1vw, 1rem);
+  min-width: 0;
+  text-align: center;
+}
+
+.countdown-box .digit {
+  font-size: clamp(1.4rem, 4.5vw, 2.6rem);
+  font-weight: 900;
+  font-family: var(--font-heading);
+  color: var(--accent-red);
+  line-height: 1;
+}
+
+.countdown-box .label {
+  font-size: clamp(0.65rem, 1.8vw, 0.75rem);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-top: 0.4rem;
+}
+
+/* Stats Health Card */
+.health-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.health-stat-pill {
+  background: rgba(10, 12, 16, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.health-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 51, 68, 0.15);
+  color: var(--accent-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.health-stat-text h4 {
+  font-size: 1.35rem;
+  margin-bottom: 0.15rem;
+}
+
+.health-stat-text p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* Admin Dashboard Specific */
+.admin-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.admin-metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  padding: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-metric-card:hover {
+  border-color: rgba(255, 51, 68, 0.4);
+}
+
+.admin-metric-val {
+  font-size: 2.2rem;
+  font-weight: 900;
+  font-family: var(--font-heading);
+  line-height: 1;
+  margin-bottom: 0.35rem;
+}
+
+.admin-metric-lbl {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.admin-metric-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+/* Custom Table Styling */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 18px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+}
+
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.custom-table th {
+  background: rgba(10, 12, 16, 0.9);
+  padding: 1.1rem 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.custom-table td {
+  padding: 1.1rem 1.25rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.custom-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-cell-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent-red);
+}
+
+.time-left-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.time-left-active {
+  color: var(--accent-green);
+}
+
+.time-left-expiring {
+  color: var(--accent-gold);
+}
+
+.time-left-expired {
+  color: var(--accent-red);
+}
+
+/* Dashboard Tabs */
+.dash-tabs {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.dash-tab-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--transition-fast);
+}
+
+.dash-tab-btn:hover, .dash-tab-btn.active {
+  background: rgba(255, 51, 68, 0.12);
+  color: var(--accent-red);
+}
+
+/* ==========================================================================
+   Dashboard & Admin Responsive Breakpoints
+   ========================================================================== */
+
+/* Tablets & Landscape (<= 992px) */
+@media (max-width: 992px) {
+  .dashboard-layout {
+    padding: 90px 0 60px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .profile-hero-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .profile-user-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .admin-metrics-row {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  .health-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Small Tablets & Phablets (<= 768px) */
+@media (max-width: 768px) {
+  .dashboard-layout {
+    padding: 80px 0 50px;
+  }
+
+  .profile-hero-card {
+    padding: 1.5rem 1.25rem;
+    border-radius: 18px;
+  }
+
+  .profile-avatar-wrapper {
+    width: 80px;
+    height: 80px;
+  }
+
+  .profile-details h2 {
+    font-size: 1.5rem;
+  }
+
+  .profile-meta-chips {
+    gap: 0.5rem;
+  }
+
+  .meta-chip {
+    font-size: 0.72rem;
+    padding: 0.25rem 0.6rem;
+  }
+
+  .subscription-clock-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .subscription-plan-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .admin-metrics-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+  }
+
+  .admin-metric-card {
+    padding: 1.25rem;
+    border-radius: 14px;
+  }
+
+  .admin-metric-val {
+    font-size: 1.7rem;
+  }
+
+  .dash-tabs {
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .dash-tabs::-webkit-scrollbar { display: none; }
+
+  .dash-tab-btn {
+    font-size: 0.85rem;
+    padding: 0.45rem 0.75rem;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* Make admin tables horizontally scrollable */
+  .table-responsive {
+    border-radius: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .custom-table {
+    min-width: 650px;
+  }
+
+  .health-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Standard Mobile (<= 576px) */
+@media (max-width: 576px) {
+  .admin-metrics-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+  }
+
+  .admin-metric-card {
+    padding: 1rem 0.85rem;
+    border-radius: 12px;
+  }
+
+  .admin-metric-val {
+    font-size: 1.4rem;
+  }
+
+  .admin-metric-lbl {
+    font-size: 0.7rem;
+  }
+
+  .admin-metric-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+  }
+
+  /* Countdown fully fluid */
+  .countdown-digits {
+    gap: 0.5rem;
+  }
+
+  .countdown-box {
+    border-radius: 12px;
+    padding: 0.75rem 0.35rem;
+  }
+
+  /* Subscription clock card mobile */
+  .subscription-clock-card {
+    padding: 1.25rem 0.85rem;
+    border-radius: 18px;
+  }
+
+  .cart-total-row {
+    font-size: 1rem;
+  }
+
+  /* Orders and Tables */
+  .custom-table th,
+  .custom-table td {
+    padding: 0.85rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .user-cell-img {
+    width: 32px;
+    height: 32px;
+  }
+}
+

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Shop 40+ Pro Supplements, Shakers & Gym Gear | IronPulse{% endblock %}
+
+{% block content %}
+<div style="padding-top: 100px; padding-bottom: 80px;">
+  <div class="container">
+    <div class="section-header" style="margin-bottom: 2rem;">
+      <span class="section-sub">Official Gym Nutrition & Gear</span>
+      <h1 class="section-title">THE IRONPULSE PRO SHOP</h1>
+      <p class="section-desc">
+        Explore <strong>40+ authentic fitness products</strong>: 100% Whey Protein Isolates, explosive Pre-Workouts, pure Creapure Creatine, leak-proof Shakers, and heavy-duty Powerlifting Belts.
+      </p>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="shop-filters">
+      <!-- Category Tabs -->
+      <div class="cat-tabs">
+        <a href="{{ url_for('shop') }}" class="cat-tab {% if not selected_category %}active{% endif %}">
+          All Products ({{ total_count }})
+        </a>
+        {% for c in categories %}
+          <a href="{{ url_for('shop', category=c.id) }}" class="cat-tab {% if selected_category == c.id %}active{% endif %}">
+            <i class="fa-solid {{ c.icon_class }}"></i> {{ c.name }}
+          </a>
+        {% endfor %}
+      </div>
+
+      <!-- Search & Sort -->
+      <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <form action="{{ url_for('shop') }}" method="GET" style="display: flex; gap: 0.5rem;">
+          {% if selected_category %}
+            <input type="hidden" name="category" value="{{ selected_category }}">
+          {% endif %}
+          <div class="shop-search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Search 40+ supplements...">
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">Search</button>
+        </form>
+
+        <select class="form-control" style="width: auto; padding: 0.5rem 1rem;" onchange="location = this.value;">
+          <option value="{{ url_for('shop', category=selected_category, search=search_query, sort='default') }}" {% if selected_sort == 'default' %}selected{% endif %}>Sort by: Featured</option>
+          <option value="{{ url_for('shop', category=selected_category, search=search_query, sort='price_asc') }}" {% if selected_sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+          <option value="{{ url_for('shop', category=selected_category, search=search_query, sort='price_desc') }}" {% if selected_sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+          <option value="{{ url_for('shop', category=selected_category, search=search_query, sort='rating') }}" {% if selected_sort == 'rating' %}selected{% endif %}>Highest Rated ★</option>
+          <option value="{{ url_for('shop', category=selected_category, search=search_query, sort='popular') }}" {% if selected_sort == 'popular' %}selected{% endif %}>Most Popular</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Products Grid (40 Gym Products) -->
+    <div class="products-grid">
+      {% for prod in products %}
+        <div class="product-card" id="productCard{{ prod.id }}">
+          <div class="product-thumb" onclick="openProductQuickView({{ prod | tojson | forceescape }})" style="cursor: pointer;">
+            <img src="{{ prod.image_url }}" alt="{{ prod.name }}" loading="lazy">
+            <span class="product-brand-tag">{{ prod.brand }}</span>
+            <span class="product-rating"><i class="fa-solid fa-star"></i> {{ prod.rating }} ({{ prod.reviews_count }})</span>
+          </div>
+
+          <div class="product-body">
+            <h4 class="product-title" onclick="openProductQuickView({{ prod | tojson | forceescape }})" style="cursor: pointer;">
+              {{ prod.name }}
+            </h4>
+            <div class="product-specs">
+              {{ prod.serving_specs or prod.flavor_variant or 'Premium Fitness Formula' }}
+            </div>
+
+            <div class="product-footer">
+              <div class="product-price-box">
+                <span class="product-price">₹{{ "{:,.0f}".format(prod.price) }}</span>
+                {% if prod.original_price %}
+                  <span class="product-old-price">₹{{ "{:,.0f}".format(prod.original_price) }}</span>
+                {% endif %}
+              </div>
+
+              {% if prod.stock_quantity > 0 %}
+                <button type="button" class="btn-add-cart" onclick="addToCart({{ prod.id }}, '{{ prod.name | escape }}', {{ prod.price }}, '{{ prod.image_url }}')" title="Add to Cart">
+                  <i class="fa-solid fa-cart-plus"></i>
+                </button>
+              {% else %}
+                <span class="badge badge-danger">Out of Stock</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if products|length == 0 %}
+      <div style="text-align: center; padding: 5rem 1rem; color: var(--text-muted);">
+        <i class="fa-solid fa-box-open" style="font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+        <h3>No supplements or gear found matching your search.</h3>
+        <p style="margin-top: 0.5rem;">Try clearing your filters or search keywords.</p>
+        <a href="{{ url_for('shop') }}" class="btn btn-outline" style="margin-top: 1.5rem;">View All 40 Products</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Product Quick View Modal -->
+<div class="modal-overlay" id="quickViewModal">
+  <div class="modal-content" style="max-width: 700px;">
+    <button type="button" class="modal-close" onclick="closeModal('quickViewModal')"><i class="fa-solid fa-xmark"></i></button>
+    <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 2rem; align-items: center;">
+      <div style="background: #000; border-radius: 16px; overflow: hidden; height: 260px;">
+        <img id="qvImage" src="" alt="Product" style="width: 100%; height: 100%; object-fit: cover;">
+      </div>
+      <div>
+        <span id="qvBrand" class="badge badge-gold" style="margin-bottom: 0.5rem;">Brand</span>
+        <h3 id="qvTitle" style="font-size: 1.4rem; margin-bottom: 0.5rem; line-height: 1.2;">Title</h3>
+        <div id="qvRating" style="color: var(--accent-gold); font-size: 0.9rem; margin-bottom: 0.75rem;"></div>
+        
+        <p id="qvDesc" style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;">
+          Description
+        </p>
+
+        <div style="background: rgba(10, 12, 16, 0.6); padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 1.5rem; font-size: 0.85rem;">
+          <div><strong style="color: #fff;">Specs:</strong> <span id="qvSpecs" style="color: var(--text-secondary);"></span></div>
+          <div style="margin-top: 0.3rem;"><strong style="color: #fff;">Flavor/Variant:</strong> <span id="qvFlavor" style="color: var(--text-secondary);"></span></div>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div id="qvPrice" style="font-size: 1.8rem; font-weight: 900; color: var(--accent-red); font-family: var(--font-heading);">₹0</div>
+          <button type="button" id="qvAddBtn" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-cart-plus"></i> Add to Gym Bag
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function openProductQuickView(prod) {
+    document.getElementById("qvImage").src = prod.image_url;
+    document.getElementById("qvBrand").innerText = prod.brand;
+    document.getElementById("qvTitle").innerText = prod.name;
+    document.getElementById("qvRating").innerHTML = `<i class="fa-solid fa-star"></i> ${prod.rating} / 5.0 (${prod.reviews_count} Verified Lifters)`;
+    document.getElementById("qvDesc").innerText = prod.description;
+    document.getElementById("qvSpecs").innerText = prod.serving_specs || "Standard Serving";
+    document.getElementById("qvFlavor").innerText = prod.flavor_variant || "Original";
+    document.getElementById("qvPrice").innerText = `₹${prod.price.toLocaleString('en-IN')}`;
+
+    const addBtn = document.getElementById("qvAddBtn");
+    addBtn.onclick = () => {
+      addToCart(prod.id, prod.name, prod.price, prod.image_url);
+      closeModal("quickViewModal");
+    };
+
+    window.openModal("quickViewModal");
+  }
+</script>
+{% endblock %}

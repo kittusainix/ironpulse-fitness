@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Log In | IronPulse Fitness & Admin Portal{% endblock %}
+
+{% block content %}
+<div style="min-height: calc(100vh - 160px); display: flex; align-items: center; justify-content: center; padding: 100px 1.5rem 60px 1.5rem;">
+  <div style="width: 100%; max-width: 480px;">
+    
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div class="brand-icon" style="margin: 0 auto 1rem auto; width: 50px; height: 50px; font-size: 1.5rem;">
+        <i class="fa-solid fa-dumbbell"></i>
+      </div>
+      <h2 style="font-size: 2.2rem; margin-bottom: 0.5rem;">WELCOME BACK</h2>
+      <p style="color: var(--text-secondary); font-size: 0.95rem;">Access your workout stats, subscriptions, and shop orders.</p>
+    </div>
+
+    <!-- Dual Login Card -->
+    <div class="glass-card" style="padding: 2.5rem; border: 1px solid var(--border-glow);">
+      
+      <!-- Quick Demo Account Fillers -->
+      <div style="background: rgba(10, 12, 16, 0.7); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1.5rem;">
+        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; margin-bottom: 0.5rem;">
+          <i class="fa-solid fa-key" style="color: var(--accent-gold);"></i> 1-Click Demo Login Credentials:
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="btn btn-sm" style="background: rgba(255, 51, 68, 0.15); color: var(--accent-red); border: 1px solid rgba(255, 51, 68, 0.3);" onclick="fillDemo('admin@ironpulse.gym', 'admin123')">
+            <i class="fa-solid fa-shield"></i> Master Admin
+          </button>
+          <button type="button" class="btn btn-sm" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-gold); border: 1px solid rgba(245, 158, 11, 0.3);" onclick="fillDemo('rahul@student.edu', 'user123')">
+            <i class="fa-solid fa-graduation-cap"></i> Student Member
+          </button>
+          <button type="button" class="btn btn-sm" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3);" onclick="fillDemo('couple@titan.in', 'user123')">
+            <i class="fa-solid fa-heart"></i> Couple Pass
+          </button>
+        </div>
+      </div>
+
+      <form action="{{ url_for('login') }}" method="POST">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div style="position: relative;">
+            <input type="email" class="form-control" name="email" id="loginEmail" placeholder="yourname@domain.com" required style="padding-left: 2.75rem;">
+            <i class="fa-solid fa-envelope" style="position: absolute; left: 14px; top: 14px; color: var(--text-muted);"></i>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div style="position: relative;">
+            <input type="password" class="form-control" name="password" id="loginPassword" placeholder="••••••••" required style="padding-left: 2.75rem;">
+            <i class="fa-solid fa-lock" style="position: absolute; left: 14px; top: 14px; color: var(--text-muted);"></i>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.85rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); cursor: pointer;">
+            <input type="checkbox" checked style="accent-color: var(--accent-red);"> Remember Me
+          </label>
+          <a href="#" style="color: var(--accent-red);">Forgot Password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
+          <i class="fa-solid fa-right-to-bracket"></i> Sign In to Account
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-secondary);">
+        Don't have an IronPulse account? 
+        <a href="{{ url_for('register') }}" style="color: var(--accent-red); font-weight: 700;">Join as a Member</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function fillDemo(email, pass) {
+    document.getElementById("loginEmail").value = email;
+    document.getElementById("loginPassword").value = pass;
+  }
+</script>
+{% endblock %}

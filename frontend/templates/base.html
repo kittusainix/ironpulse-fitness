@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}IronPulse Fitness | Elite Gym, Subscriptions & Supplements{% endblock %}</title>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Custom Stylesheets -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="{{ url_for('index') }}" class="brand-logo">
+        <div class="brand-icon"><i class="fa-solid fa-dumbbell"></i></div>
+        IRON<span>PULSE</span>
+      </a>
+
+      <!-- Navigation Links / Mobile Drawer -->
+      <nav class="nav-links" id="mainNavLinks">
+        <div class="mobile-drawer-header">
+          <div class="brand-logo" style="font-size: 1.35rem;">
+            <div class="brand-icon" style="width: 34px; height: 34px; font-size: 1rem;"><i class="fa-solid fa-dumbbell"></i></div>
+            IRON<span>PULSE</span>
+          </div>
+          <button type="button" class="mobile-drawer-close" id="mobileDrawerCloseBtn" aria-label="Close Navigation">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <ul class="nav-menu-list">
+          <li><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}"><i class="fa-solid fa-house nav-mobile-icon"></i> Home</a></li>
+          <li><a href="{{ url_for('plans') }}" class="nav-link {% if request.endpoint == 'plans' %}active{% endif %}"><i class="fa-solid fa-bolt nav-mobile-icon"></i> Memberships</a></li>
+          <li><a href="{{ url_for('shop') }}" class="nav-link {% if request.endpoint == 'shop' %}active{% endif %}"><i class="fa-solid fa-bottle-droplet nav-mobile-icon"></i> Shop (40+ Products)</a></li>
+          <li><a href="{{ url_for('index') }}#bmiSection" class="nav-link"><i class="fa-solid fa-calculator nav-mobile-icon"></i> BMI Calculator</a></li>
+          
+          {% if current_user %}
+            {% if current_user.role == 'admin' %}
+              <li><a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" style="color: var(--accent-red);"><i class="fa-solid fa-gauge-high nav-mobile-icon"></i> Admin Center</a></li>
+            {% else %}
+              <li><a href="{{ url_for('profile') }}" class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}"><i class="fa-solid fa-user-check nav-mobile-icon"></i> My Fitness Profile</a></li>
+            {% endif %}
+          {% endif %}
+        </ul>
+
+        <!-- Mobile Drawer Auth Block (visible only in mobile menu) -->
+        <div class="mobile-drawer-auth">
+          {% if current_user %}
+            <div class="mobile-user-profile-badge">
+              <img src="{{ current_user.photo_url }}" alt="User">
+              <div>
+                <div style="font-weight: 700; color: #fff;">{{ current_user.full_name }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ current_user.email }}</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+              {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary btn-sm" style="flex: 1;"><i class="fa-solid fa-shield"></i> Admin Panel</a>
+              {% else %}
+                <a href="{{ url_for('profile') }}" class="btn btn-primary btn-sm" style="flex: 1;"><i class="fa-solid fa-user"></i> Profile</a>
+              {% endif %}
+              <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm" style="width: 44px; padding: 0;" title="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+            </div>
+          {% else %}
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <a href="{{ url_for('login') }}" class="btn btn-outline btn-sm" style="width: 100%;"><i class="fa-solid fa-right-to-bracket"></i> Log In</a>
+              <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm" style="width: 100%;"><i class="fa-solid fa-user-plus"></i> Join Now</a>
+            </div>
+          {% endif %}
+        </div>
+      </nav>
+
+      <!-- Mobile Navigation Backdrop Overlay -->
+      <div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
+
+      <div class="nav-actions">
+        <!-- Cart Toggle Button -->
+        <button type="button" class="cart-btn" id="cartToggleBtn" title="View Cart">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span class="cart-badge" id="cartBadgeCount">0</span>
+        </button>
+
+        <!-- Desktop Only User Auth Controls -->
+        <div class="nav-user-desktop">
+          {% if current_user %}
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline btn-sm"><i class="fa-solid fa-shield"></i> Admin</a>
+              {% else %}
+                <a href="{{ url_for('profile') }}" class="btn btn-outline btn-sm">
+                  <img src="{{ current_user.photo_url }}" alt="User" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover; display: inline-block; vertical-align: middle; margin-right: 4px;">
+                  Profile
+                </a>
+              {% endif %}
+              <a href="{{ url_for('logout') }}" class="btn btn-sm" style="background: rgba(255,255,255,0.08); color: #fff;" title="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+            </div>
+          {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-outline btn-sm">Log In</a>
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Join Now</a>
+          {% endif %}
+        </div>
+
+        <!-- Mobile Hamburger Toggle -->
+        <button type="button" class="mobile-toggle" id="mobileMenuToggleBtn" aria-label="Toggle Menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Message Toasts -->
+  <div class="toast-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="toast toast-{{ category }}">
+            {% if category == 'success' %}
+              <i class="fa-solid fa-circle-check" style="color: var(--accent-green); font-size: 1.2rem;"></i>
+            {% elif category == 'danger' %}
+              <i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-red); font-size: 1.2rem;"></i>
+            {% else %}
+              <i class="fa-solid fa-circle-info" style="color: var(--accent-gold); font-size: 1.2rem;"></i>
+            {% endif %}
+            <span>{{ message }}</span>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content Block -->
+  <main style="flex-grow: 1;">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Slide-out Cart Drawer -->
+  <aside class="cart-drawer" id="cartDrawer">
+    <div class="cart-header">
+      <div style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800;">
+        <i class="fa-solid fa-cart-shopping" style="color: var(--accent-red);"></i> Gym Bag Cart
+      </div>
+      <button type="button" class="modal-close" id="cartDrawerClose" style="position: static;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="cart-items-container" id="cartItemsList">
+      <!-- Injected via shop.js -->
+    </div>
+
+    <div class="cart-footer">
+      <div class="cart-total-row">
+        <span>Order Total:</span>
+        <span id="cartTotalAmount" style="color: var(--accent-red);">₹0</span>
+      </div>
+
+      {% if current_user %}
+        <button type="button" class="btn btn-primary" id="cartCheckoutBtn" style="width: 100%;">
+          <i class="fa-solid fa-lock"></i> Proceed to Checkout
+        </button>
+      {% else %}
+        <a href="{{ url_for('login') }}?next={{ url_for('shop') }}" class="btn btn-primary" style="width: 100%;">
+          <i class="fa-solid fa-user-lock"></i> Log In to Checkout
+        </a>
+      {% endif %}
+    </div>
+  </aside>
+
+  <!-- Checkout Modal -->
+  <div class="modal-overlay" id="checkoutModal">
+    <div class="modal-content">
+      <button type="button" class="modal-close" onclick="closeModal('checkoutModal')"><i class="fa-solid fa-xmark"></i></button>
+      <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-bag-shopping" style="color: var(--accent-red);"></i> Instant Gym Order Checkout</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">Review your delivery address and confirm your fitness supplement order.</p>
+
+      <form action="{{ url_for('checkout') }}" method="POST">
+        <input type="hidden" name="cart_data" id="cartDataInput" value="[]">
+
+        <div class="form-group">
+          <label class="form-label">Delivery Address</label>
+          <textarea class="form-control" name="address" rows="3" placeholder="Enter your full street address, apartment, and city..." required></textarea>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Contact Phone</label>
+            <input type="tel" class="form-control" name="phone" value="{{ current_user.phone if current_user else '' }}" placeholder="+91 98765 43210" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Payment Mode</label>
+            <select class="form-control" name="payment_method">
+              <option value="ONLINE_UPI">Instant UPI / NetBanking</option>
+              <option value="CARD">Credit / Debit Card</option>
+              <option value="CASH_ON_DELIVERY">Cash on Delivery (Gym Desk / Home)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="background: rgba(10, 12, 16, 0.6); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color); margin: 1.5rem 0; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: 700;">Payable Amount:</span>
+          <span id="checkoutTotalVal" style="font-size: 1.4rem; font-weight: 900; color: var(--accent-red);">₹0</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          <i class="fa-solid fa-circle-check"></i> Confirm & Place Order
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a href="{{ url_for('index') }}" class="brand-logo" style="margin-bottom: 1rem;">
+            <div class="brand-icon"><i class="fa-solid fa-dumbbell"></i></div>
+            IRON<span>PULSE</span>
+          </a>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;">
+            Transforming bodies and forging discipline. Premium gym facilities, world-class supplement nutrition, certified trainers, and dedicated membership tracking.
+          </p>
+          <div style="display: flex; gap: 0.75rem;">
+            <a href="#" class="cart-btn" style="width: 38px; height: 38px;"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#" class="cart-btn" style="width: 38px; height: 38px;"><i class="fa-brands fa-youtube"></i></a>
+            <a href="#" class="cart-btn" style="width: 38px; height: 38px;"><i class="fa-brands fa-facebook"></i></a>
+            <a href="#" class="cart-btn" style="width: 38px; height: 38px;"><i class="fa-brands fa-x-twitter"></i></a>
+          </div>
+        </div>
+
+        <div>
+          <h4 style="font-size: 1.1rem; margin-bottom: 1.25rem;">Quick Links</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.9rem; color: var(--text-secondary);">
+            <li><a href="{{ url_for('index') }}" class="nav-link">Home</a></li>
+            <li><a href="{{ url_for('plans') }}" class="nav-link">Subscription Plans</a></li>
+            <li><a href="{{ url_for('shop') }}" class="nav-link">Supplements & Shakers</a></li>
+            <li><a href="{{ url_for('index') }}#bmiSection" class="nav-link">Interactive BMI Calculator</a></li>
+            <li><a href="{{ url_for('register') }}" class="nav-link">Join IronPulse</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="font-size: 1.1rem; margin-bottom: 1.25rem;">Special Offers</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.9rem; color: var(--text-secondary);">
+            <li><a href="{{ url_for('plans') }}" style="color: var(--accent-gold); font-weight: 700;"><i class="fa-solid fa-graduation-cap"></i> Student Discount Pass (₹799)</a></li>
+            <li><a href="{{ url_for('plans') }}" style="color: var(--accent-red); font-weight: 700;"><i class="fa-solid fa-heart"></i> Couple Power Duo (₹1,999)</a></li>
+            <li><a href="{{ url_for('plans') }}"><i class="fa-solid fa-crown"></i> VIP Elite Athlete Pass</a></li>
+            <li><a href="{{ url_for('shop') }}"><i class="fa-solid fa-percent"></i> 100% Authentic Whey & Creatine</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="font-size: 1.1rem; margin-bottom: 1.25rem;">Gym Hours & Location</h4>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-clock" style="color: var(--accent-red); margin-right: 6px;"></i> Mon - Sat: 5:00 AM - 11:00 PM</p>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-clock" style="color: var(--accent-gold); margin-right: 6px;"></i> Sunday: 6:00 AM - 8:00 PM</p>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 1rem;"><i class="fa-solid fa-location-dot" style="color: var(--accent-red); margin-right: 6px;"></i> IronPulse Arena, Ring Road, Fitness Boulevard</p>
+          <div style="margin-top: 1rem;">
+            <span class="badge badge-success"><i class="fa-solid fa-database"></i> Oracle PL/SQL Powered DB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; {{ now_year }} IronPulse Fitness & Gym Management System. Built with HTML5, CSS3, JS, Python & Oracle PL/SQL.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Core Scripts -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bmi.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/shop.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+
+</body>
+</html>

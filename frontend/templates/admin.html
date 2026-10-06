@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Command Center | IronPulse Fitness{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+  <div class="container">
+    
+    <!-- Admin Header -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <h1 style="font-size: 2.2rem;"><i class="fa-solid fa-shield-halved" style="color: var(--accent-red);"></i> ADMIN COMMAND CENTER</h1>
+          <span class="badge badge-admin">Master Control</span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.25rem;">
+          Full oversight of member profiles, subscription countdowns ("kitna time bacha hai"), 40-product inventory, and store orders.
+        </p>
+      </div>
+      <div>
+        <button type="button" class="btn btn-primary btn-sm" onclick="openModal('addProductModal')">
+          <i class="fa-solid fa-plus"></i> Add New Shop Product
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="admin-metrics-row">
+      <div class="admin-metric-card">
+        <div>
+          <div class="admin-metric-val">{{ metrics.total_users }}</div>
+          <div class="admin-metric-lbl">Total Registered Members</div>
+        </div>
+        <div class="admin-metric-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+          <i class="fa-solid fa-users"></i>
+        </div>
+      </div>
+
+      <div class="admin-metric-card">
+        <div>
+          <div class="admin-metric-val" style="color: var(--accent-green);">{{ metrics.active_subs }}</div>
+          <div class="admin-metric-lbl">Active Subscriptions</div>
+        </div>
+        <div class="admin-metric-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+          <i class="fa-solid fa-id-card-clip"></i>
+        </div>
+      </div>
+
+      <div class="admin-metric-card">
+        <div>
+          <div class="admin-metric-val" style="color: var(--accent-gold);">{{ metrics.expiring_soon }}</div>
+          <div class="admin-metric-lbl">Expiring Soon (≤ 7 Days)</div>
+        </div>
+        <div class="admin-metric-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+          <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+      </div>
+
+      <div class="admin-metric-card">
+        <div>
+          <div class="admin-metric-val" style="color: var(--accent-red);">₹{{ "{:,.0f}".format(metrics.total_revenue) }}</div>
+          <div class="admin-metric-lbl">Total System Revenue</div>
+        </div>
+        <div class="admin-metric-icon" style="background: rgba(255, 51, 68, 0.15); color: var(--accent-red);">
+          <i class="fa-solid fa-indian-rupee-sign"></i>
+        </div>
+      </div>
+
+      <div class="admin-metric-card">
+        <div>
+          <div class="admin-metric-val">{{ metrics.total_products }}</div>
+          <div class="admin-metric-lbl">Catalog Products ({{ metrics.low_stock }} Low)</div>
+        </div>
+        <div class="admin-metric-icon" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6;">
+          <i class="fa-solid fa-boxes-stacked"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="dash-tabs">
+      <button type="button" class="dash-tab-btn active" data-tab="tabUsers">
+        <i class="fa-solid fa-users-gear"></i> Member Profiles & Subscriptions ({{ users|length }})
+      </button>
+      <button type="button" class="dash-tab-btn" data-tab="tabProducts">
+        <i class="fa-solid fa-pills"></i> Shop Catalog ({{ products|length }} Products)
+      </button>
+      <button type="button" class="dash-tab-btn" data-tab="tabOrders">
+        <i class="fa-solid fa-truck-fast"></i> Store Orders ({{ orders|length }})
+      </button>
+      <button type="button" class="dash-tab-btn" data-tab="tabPlsql">
+        <i class="fa-solid fa-database"></i> Oracle PL/SQL Schema & Logs
+      </button>
+    </div>
+
+    <!-- TAB 1: USER MANAGEMENT ("Admin sab control kr sake and sab bata sake") -->
+    <div class="dash-tab-pane" id="tabUsers">
+      <div class="glass-card">
+        
+        <!-- Filter Controls -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <div style="position: relative; width: 280px;">
+              <input type="text" id="adminUserSearch" class="form-control" placeholder="Search members by name, email..." style="padding-left: 2.5rem;">
+              <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 13px; color: var(--text-muted);"></i>
+            </div>
+
+            <select id="adminUserStatusFilter" class="form-control" style="width: auto;">
+              <option value="all">Filter: All Statuses</option>
+              <option value="active">Active Only (> 7 Days)</option>
+              <option value="expiring_soon">Expiring Soon (≤ 7 Days)</option>
+              <option value="expired">Expired Members</option>
+              <option value="no_plan">No Active Plan</option>
+            </select>
+          </div>
+
+          <div style="font-size: 0.85rem; color: var(--text-secondary);">
+            <i class="fa-solid fa-circle-info" style="color: var(--accent-gold);"></i> Admin can instantly extend days or reassign plans.
+          </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>Contact</th>
+                <th>Age / Gender</th>
+                <th>Weight / Height</th>
+                <th>BMI & Category</th>
+                <th>Subscription Plan</th>
+                <th>Time Remaining ("Kitna Time Bacha Hai")</th>
+                <th>Admin Controls</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in users %}
+                <tr class="user-row" data-status="{{ u.sub_time.status }}">
+                  <td>
+                    <div class="user-cell">
+                      <img src="{{ u.photo_url or '/static/images/default-avatar.png' }}" alt="{{ u.full_name }}" class="user-cell-img">
+                      <div>
+                        <strong style="display: block; font-size: 0.95rem;">{{ u.full_name }}</strong>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">ID #{{ u.id }} • {{ u.role }}</span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td>
+                    <div style="font-size: 0.85rem;">{{ u.email }}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);"><i class="fa-solid fa-phone" style="font-size: 0.7rem;"></i> {{ u.phone }}</div>
+                  </td>
+
+                  <td>{{ u.age or 'N/A' }} Yrs • {{ u.gender or 'N/A' }}</td>
+
+                  <td>
+                    <strong>{{ u.weight_kg or '--' }} kg</strong> / {{ u.height_cm or '--' }} cm
+                  </td>
+
+                  <td>
+                    <div style="font-weight: 800; font-size: 1.1rem; color: {% if u.bmi_category == 'Normal Weight' %}var(--accent-green){% elif u.bmi_category == 'Overweight' %}var(--accent-gold){% else %}var(--accent-red){% endif %};">
+                      {{ u.bmi_value or 'N/A' }}
+                    </div>
+                    <span class="badge {% if u.bmi_category == 'Normal Weight' %}badge-success{% elif u.bmi_category == 'Overweight' %}badge-warning{% else %}badge-danger{% endif %}" style="font-size: 0.65rem; padding: 0.2rem 0.5rem;">
+                      {{ u.bmi_category or 'N/A' }}
+                    </span>
+                  </td>
+
+                  <td>
+                    {% if u.plan_name %}
+                      <strong style="color: #fff; font-size: 0.9rem;">{{ u.plan_name }}</strong>
+                      {% if u.sub_notes %}
+                        <div style="font-size: 0.75rem; color: var(--accent-gold); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                          {{ u.sub_notes }}
+                        </div>
+                      {% endif %}
+                    {% else %}
+                      <span style="color: var(--text-muted); font-size: 0.85rem;">No Plan</span>
+                    {% endif %}
+                  </td>
+
+                  <!-- Remaining Subscription Time Badge ("Time ki kitna time bacha hai") -->
+                  <td>
+                    {% if u.sub_time.has_subscription and u.sub_time.is_active %}
+                      <div class="time-left-badge {% if u.sub_time.days <= 7 %}time-left-expiring{% else %}time-left-active{% endif %}">
+                        <i class="fa-solid fa-clock"></i>
+                        <span>{{ u.sub_time.time_str }}</span>
+                      </div>
+                      <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
+                        Till: {{ u.sub_time.end_date_formatted }}
+                      </div>
+                    {% elif u.sub_time.has_subscription and not u.sub_time.is_active %}
+                      <span class="badge badge-danger"><i class="fa-solid fa-circle-xmark"></i> Expired</span>
+                    {% else %}
+                      <span class="badge" style="background: rgba(255,255,255,0.06); color: var(--text-muted);">None</span>
+                    {% endif %}
+                  </td>
+
+                  <!-- Admin Action Controls -->
+                  <td>
+                    <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                      <button type="button" class="btn btn-sm" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="quickExtendSub({{ u.id }}, 30)" title="Extend +30 Days">
+                        +30d
+                      </button>
+                      <button type="button" class="btn btn-sm" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="openAssignPlanModal({{ u.id }}, '{{ u.full_name | escape }}')" title="Change / Assign Plan">
+                        Plan
+                      </button>
+                      {% if u.role != 'admin' %}
+                        <form action="{{ url_for('admin_delete_user_route', user_id=u.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Permanently remove this user?');">
+                          <button type="submit" class="btn btn-sm" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.75rem; padding: 0.25rem 0.5rem;" title="Delete Member">
+                            <i class="fa-solid fa-trash"></i>
+                          </button>
+                        </form>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: PRODUCT INVENTORY MANAGEMENT (40 Products) -->
+    <div class="dash-tab-pane" id="tabProducts" style="display: none;">
+      <div class="glass-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h3 style="font-size: 1.3rem;">Supplement & Equipment Catalog ({{ products|length }} Items)</h3>
+          <button type="button" class="btn btn-primary btn-sm" onclick="openModal('addProductModal')">
+            <i class="fa-solid fa-plus"></i> Add New Product
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Category</th>
+                <th>Brand</th>
+                <th>Price</th>
+                <th>Stock Level</th>
+                <th>Rating</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in products %}
+                <tr>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                      <img src="{{ p.image_url }}" alt="Img" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover;">
+                      <div>
+                        <strong style="font-size: 0.9rem;">{{ p.name }}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ p.serving_specs or p.flavor_variant or 'Pro Formula' }}</div>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td><span class="badge badge-gold" style="font-size: 0.7rem;">{{ p.category_name }}</span></td>
+
+                  <td>{{ p.brand }}</td>
+
+                  <td style="font-weight: 800; color: var(--accent-red);">₹{{ "{:,.0f}".format(p.price) }}</td>
+
+                  <td>
+                    {% if p.stock_quantity <= 10 %}
+                      <span class="badge badge-danger">{{ p.stock_quantity }} Left (Low)</span>
+                    {% else %}
+                      <span class="badge badge-success">{{ p.stock_quantity }} In Stock</span>
+                    {% endif %}
+                  </td>
+
+                  <td><i class="fa-solid fa-star" style="color: var(--accent-gold);"></i> {{ p.rating }}</td>
+
+                  <td>
+                    <div style="display: flex; gap: 0.4rem;">
+                      <button type="button" class="btn btn-sm btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="populateEditProduct({{ p | tojson | forceescape }})">
+                        <i class="fa-solid fa-pen"></i> Edit
+                      </button>
+                      <form action="{{ url_for('admin_delete_product_route', product_id=p.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Remove product from shop?');">
+                        <button type="submit" class="btn btn-sm" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: STORE ORDERS -->
+    <div class="dash-tab-pane" id="tabOrders" style="display: none;">
+      <div class="glass-card">
+        <h3 style="font-size: 1.3rem; margin-bottom: 1.5rem;">Member Orders & Supplement Deliveries</h3>
+
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Line Items</th>
+                <th>Total</th>
+                <th>Destination</th>
+                <th>Status Control</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for o in orders %}
+                <tr>
+                  <td><strong>#{{ o.id }}</strong><div style="font-size: 0.75rem; color: var(--text-muted);">{{ o.created_at[:10] if o.created_at else 'Recent' }}</div></td>
+                  <td>
+                    <strong>{{ o.customer_name }}</strong>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ o.customer_email }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-phone"></i> {{ o.contact_phone }}</div>
+                  </td>
+
+                  <td>
+                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                      {% for itm in o.items %}
+                        <span style="font-size: 0.85rem;">{{ itm.quantity }}x {{ itm.product_name }}</span>
+                      {% endfor %}
+                    </div>
+                  </td>
+
+                  <td style="font-weight: 800; color: var(--accent-red);">₹{{ "{:,.0f}".format(o.total_amount) }}</td>
+
+                  <td style="font-size: 0.85rem; color: var(--text-secondary); max-width: 200px;">{{ o.shipping_address }}</td>
+
+                  <td>
+                    <form action="{{ url_for('admin_order_status_route') }}" method="POST" style="display: flex; gap: 0.5rem; align-items: center;">
+                      <input type="hidden" name="order_id" value="{{ o.id }}">
+                      <select name="status" class="form-control" style="width: auto; padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                        <option value="CONFIRMED" {% if o.order_status == 'CONFIRMED' %}selected{% endif %}>CONFIRMED</option>
+                        <option value="SHIPPED" {% if o.order_status == 'SHIPPED' %}selected{% endif %}>SHIPPED</option>
+                        <option value="DELIVERED" {% if o.order_status == 'DELIVERED' %}selected{% endif %}>DELIVERED</option>
+                        <option value="CANCELLED" {% if o.order_status == 'CANCELLED' %}selected{% endif %}>CANCELLED</option>
+                      </select>
+                      <button type="submit" class="btn btn-sm btn-primary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Update</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: ORACLE PL/SQL ARCHITECTURE & LOGS -->
+    <div class="dash-tab-pane" id="tabPlsql" style="display: none;">
+      <div class="glass-card">
+        <h3 style="font-size: 1.3rem; margin-bottom: 1rem;"><i class="fa-solid fa-database" style="color: var(--accent-red);"></i> Oracle PL/SQL Enterprise Database Architecture</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;">
+          This system was designed with 100% compliant Oracle PL/SQL specifications located in <code>database/plsql/</code>.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+          <div style="background: rgba(10, 12, 16, 0.7); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem;">
+            <h4 style="font-size: 1rem; color: var(--accent-green); margin-bottom: 0.5rem;"><i class="fa-solid fa-bolt"></i> Automated Triggers</h4>
+            <ul style="font-size: 0.85rem; color: var(--text-secondary); list-style: none; display: flex; flex-direction: column; gap: 0.4rem;">
+              <li><code>trg_users_calc_bmi</code> - Auto computes BMI & WHO category on member insert/update.</li>
+              <li><code>trg_order_items_reduce_stock</code> - Decrements product stock quantity on store purchases.</li>
+              <li><code>trg_sub_audit</code> - Logs all subscription creation and extensions into <code>audit_logs</code>.</li>
+            </ul>
+          </div>
+
+          <div style="background: rgba(10, 12, 16, 0.7); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem;">
+            <h4 style="font-size: 1rem; color: var(--accent-gold); margin-bottom: 0.5rem;"><i class="fa-solid fa-gears"></i> Stored Procedures</h4>
+            <ul style="font-size: 0.85rem; color: var(--text-secondary); list-style: none; display: flex; flex-direction: column; gap: 0.4rem;">
+              <li><code>sp_register_user</code> - Handles encrypted member onboarding.</li>
+              <li><code>sp_subscribe_user</code> - Manages Student, Couple, and Standard plans.</li>
+              <li><code>sp_admin_extend_subscription</code> - Extends days and recalibrates expiry.</li>
+              <li><code>sp_place_order</code> - Line-item order processing and stock checks.</li>
+            </ul>
+          </div>
+
+          <div style="background: rgba(10, 12, 16, 0.7); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem;">
+            <h4 style="font-size: 1rem; color: var(--accent-red); margin-bottom: 0.5rem;"><i class="fa-solid fa-box-archive"></i> Package & Functions</h4>
+            <ul style="font-size: 0.85rem; color: var(--text-secondary); list-style: none; display: flex; flex-direction: column; gap: 0.4rem;">
+              <li><code>pkg_gym_management</code> - Enterprise package specification & body.</li>
+              <li><code>fn_calculate_days_remaining</code> - Returns integer countdown days.</li>
+              <li><code>fn_format_time_left</code> - Returns formatted countdown string.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div style="margin-top: 2rem; padding: 1.25rem; background: rgba(255, 51, 68, 0.08); border: 1px solid var(--accent-red); border-radius: 14px;">
+          <h4 style="font-size: 1rem; color: var(--accent-red); margin-bottom: 0.35rem;"><i class="fa-solid fa-plug"></i> Oracle DB Connectivity</h4>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">
+            <code>oracle_connector.py</code> is configured using <code>python-oracledb</code>. To switch this server directly to Oracle XE or Oracle Cloud ATP, set <code>USE_ORACLE = True</code> in <code>config.py</code>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal: Assign / Change Plan -->
+<div class="modal-overlay" id="assignPlanModal">
+  <div class="modal-content">
+    <button type="button" class="modal-close" onclick="closeModal('assignPlanModal')"><i class="fa-solid fa-xmark"></i></button>
+    <h3 style="font-size: 1.4rem; margin-bottom: 0.5rem;">Assign Membership Plan</h3>
+    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;" id="assignPlanUserLabel">Select a new subscription plan.</p>
+
+    <form action="{{ url_for('admin_assign_plan_route') }}" method="POST">
+      <input type="hidden" name="user_id" id="assignPlanUserId" value="">
+
+      <div class="form-group">
+        <label class="form-label">Subscription Plan</label>
+        <select class="form-control" name="plan_id" required>
+          {% for p in plans %}
+            <option value="{{ p.id }}">{{ p.name }} (₹{{ "{:,.0f}".format(p.price) }} - {{ p.duration_days }} Days)</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+        <i class="fa-solid fa-check"></i> Assign Plan to Member
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Add New Product -->
+<div class="modal-overlay" id="addProductModal">
+  <div class="modal-content" style="max-width: 700px;">
+    <button type="button" class="modal-close" onclick="closeModal('addProductModal')"><i class="fa-solid fa-xmark"></i></button>
+    <h3 style="font-size: 1.4rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-plus-circle" style="color: var(--accent-red);"></i> Add Product to Catalog</h3>
+    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">Add supplement, shaker, or gym equipment to the store.</p>
+
+    <form action="{{ url_for('admin_save_product_route') }}" method="POST">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Product Name *</label>
+          <input type="text" class="form-control" name="name" placeholder="e.g. Hydrolyzed Whey Isolate" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Brand *</label>
+          <input type="text" class="form-control" name="brand" placeholder="e.g. Optimum Nutrition" required>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Category *</label>
+          <select class="form-control" name="category_id" required>
+            {% for c in categories %}
+              <option value="{{ c.id }}">{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price (INR) *</label>
+          <input type="number" class="form-control" name="price" step="1" placeholder="4999" required>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Original Strike Price (INR)</label>
+          <input type="number" class="form-control" name="original_price" step="1" placeholder="5999">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stock Quantity *</label>
+          <input type="number" class="form-control" name="stock_quantity" value="50" min="0" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Image URL *</label>
+        <input type="url" class="form-control" name="image_url" placeholder="https://images.unsplash.com/..." required>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Serving Specs</label>
+          <input type="text" class="form-control" name="serving_specs" placeholder="e.g. 74 Servings • 24g Protein">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Flavor / Variant</label>
+          <input type="text" class="form-control" name="flavor_variant" placeholder="e.g. Double Rich Chocolate">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description *</label>
+        <textarea class="form-control" name="description" rows="3" placeholder="Enter product benefits and nutritional profile..." required></textarea>
+      </div>
+
+      <div style="margin-bottom: 1.25rem;">
+        <label style="display: flex; align-items: center; gap: 0.5rem; color: #fff; cursor: pointer;">
+          <input type="checkbox" name="is_featured" value="1" style="accent-color: var(--accent-red);"> Mark as Featured on Homepage
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%;">
+        <i class="fa-solid fa-save"></i> Save Product to Catalog
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Edit Product -->
+<div class="modal-overlay" id="editProductModal">
+  <div class="modal-content" style="max-width: 700px;">
+    <button type="button" class="modal-close" onclick="closeModal('editProductModal')"><i class="fa-solid fa-xmark"></i></button>
+    <h3 style="font-size: 1.4rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-pen" style="color: var(--accent-gold);"></i> Edit Product</h3>
+    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">Update price, inventory stock, or description.</p>
+
+    <form action="{{ url_for('admin_save_product_route') }}" method="POST">
+      <input type="hidden" name="product_id" id="editProductId" value="">
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Product Name</label>
+          <input type="text" class="form-control" name="name" id="editProdName" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Brand</label>
+          <input type="text" class="form-control" name="brand" id="editProdBrand" required>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-control" name="category_id" id="editProdCategory" required>
+            {% for c in categories %}
+              <option value="{{ c.id }}">{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price (INR)</label>
+          <input type="number" class="form-control" name="price" id="editProdPrice" step="1" required>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Original Price</label>
+          <input type="number" class="form-control" name="original_price" id="editProdOrigPrice" step="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stock Quantity</label>
+          <input type="number" class="form-control" name="stock_quantity" id="editProdStock" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Image URL</label>
+        <input type="url" class="form-control" name="image_url" id="editProdImageUrl" required>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Serving Specs</label>
+          <input type="text" class="form-control" name="serving_specs" id="editProdSpecs">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Flavor / Variant</label>
+          <input type="text" class="form-control" name="flavor_variant" id="editProdFlavor">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" name="description" id="editProdDesc" rows="3" required></textarea>
+      </div>
+
+      <div style="margin-bottom: 1.25rem;">
+        <label style="display: flex; align-items: center; gap: 0.5rem; color: #fff; cursor: pointer;">
+          <input type="checkbox" name="is_featured" id="editProdFeatured" value="1" style="accent-color: var(--accent-red);"> Mark as Featured
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%;">
+        <i class="fa-solid fa-save"></i> Save Product Changes
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function openAssignPlanModal(userId, userName) {
+    document.getElementById("assignPlanUserId").value = userId;
+    document.getElementById("assignPlanUserLabel").innerText = `Assigning plan to: ${userName} (ID #${userId})`;
+    window.openModal("assignPlanModal");
+  }
+</script>
+{% endblock %}

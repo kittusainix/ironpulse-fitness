@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block title %}My Fitness Profile & Subscription | IronPulse{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+  <div class="container">
+    
+    <!-- User Profile Hero Header -->
+    <div class="profile-hero-card">
+      <div class="profile-user-info">
+        <div class="profile-avatar-wrapper">
+          <img src="{{ user.photo_url }}" alt="{{ user.full_name }}" id="profileAvatarImg">
+        </div>
+
+        <div class="profile-details">
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <h2>{{ user.full_name }}</h2>
+            {% if user.role == 'admin' %}
+              <span class="badge badge-admin"><i class="fa-solid fa-shield"></i> System Admin</span>
+            {% else %}
+              <span class="badge badge-gold"><i class="fa-solid fa-certificate"></i> Member #{{ user.id }}</span>
+            {% endif %}
+          </div>
+
+          <div class="profile-meta-chips">
+            <span class="meta-chip"><i class="fa-solid fa-envelope"></i> {{ user.email }}</span>
+            <span class="meta-chip"><i class="fa-solid fa-phone"></i> {{ user.phone }}</span>
+            <span class="meta-chip"><i class="fa-solid fa-cake-candles"></i> {{ user.age or 'N/A' }} Yrs ({{ user.gender or 'Member' }})</span>
+            <span class="meta-chip"><i class="fa-solid fa-calendar"></i> Joined {{ user.created_at[:10] if user.created_at else '2026' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="openModal('editProfileModal')">
+          <i class="fa-solid fa-pen-to-square"></i> Update Body Stats & Photo
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Dashboard Two-Column Grid -->
+    <div class="dashboard-grid">
+      
+      <!-- 1. Subscription Countdown Card ("Time ki kitna time bacha hai") -->
+      <div class="subscription-clock-card">
+        <div class="subscription-plan-header">
+          <div>
+            <span class="badge badge-{{ sub.badge_color }}">{{ sub.status }}</span>
+            <h3 style="margin-top: 0.5rem;">
+              {% if sub.has_subscription %}
+                {{ sub.plan_name }}
+              {% else %}
+                No Active Membership
+              {% endif %}
+            </h3>
+          </div>
+          {% if sub.offer_tag %}
+            <span class="badge badge-gold">{{ sub.offer_tag }}</span>
+          {% endif %}
+        </div>
+
+        {% if sub.has_subscription and sub.is_active %}
+          <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+            <span><i class="fa-solid fa-calendar-check" style="color: var(--accent-green); margin-right: 4px;"></i> Valid Till: <strong>{{ sub.end_date_formatted }}</strong></span>
+            {% if sub.notes %}
+              <div style="margin-top: 0.35rem; color: var(--accent-gold);">
+                <i class="fa-solid fa-circle-info"></i> {{ sub.notes }}
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Live Real-Time Ticking Countdown: "Kitna time bacha hai" -->
+          <div class="countdown-wrapper" id="subscriptionTicker">
+            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; letter-spacing: 0.05em; margin-bottom: 1rem;">
+              <i class="fa-solid fa-hourglass-half" style="color: var(--accent-red);"></i> Membership Time Remaining ("Kitna Time Bacha Hai")
+            </div>
+
+            <div class="countdown-digits">
+              <div class="countdown-box">
+                <div class="digit" id="timerDays">{{ "%02d" % sub.days }}</div>
+                <div class="label">Days</div>
+              </div>
+              <div class="countdown-box">
+                <div class="digit" id="timerHours">{{ "%02d" % sub.hours }}</div>
+                <div class="label">Hours</div>
+              </div>
+              <div class="countdown-box">
+                <div class="digit" id="timerMins">{{ "%02d" % sub.mins }}</div>
+                <div class="label">Minutes</div>
+              </div>
+              <div class="countdown-box">
+                <div class="digit" id="timerSecs" style="animation: timerTick 1s infinite;">{{ "%02d" % sub.seconds }}</div>
+                <div class="label">Seconds</div>
+              </div>
+            </div>
+
+            <!-- Progress Bar (% left) -->
+            <div class="progress-container" style="margin-top: 1.5rem;">
+              <div class="progress-bar-fill" style="width: {{ sub.percent_remaining }}%;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">
+              <span>Subscription Progress</span>
+              <span>{{ sub.percent_remaining }}% Time Remaining</span>
+            </div>
+          </div>
+
+          <div id="subscriptionExpiredNotice" style="display: none; text-align: center; padding: 2rem 1rem;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 2.5rem; color: var(--accent-red); margin-bottom: 0.75rem;"></i>
+            <h4>Your Gym Membership Has Expired</h4>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">Renew now to continue accessing the gym floor and coach consultations.</p>
+          </div>
+
+          <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <a href="{{ url_for('plans') }}" class="btn btn-outline btn-sm" style="flex: 1;">
+              <i class="fa-solid fa-arrows-rotate"></i> Extend / Upgrade Plan
+            </a>
+            <a href="{{ url_for('shop') }}" class="btn btn-primary btn-sm" style="flex: 1;">
+              <i class="fa-solid fa-basket-shopping"></i> Shop Supplements
+            </a>
+          </div>
+
+        {% elif sub.has_subscription and not sub.is_active %}
+          <!-- Expired State -->
+          <div style="text-align: center; padding: 2.5rem 1rem;">
+            <i class="fa-solid fa-clock" style="font-size: 3rem; color: var(--accent-red); margin-bottom: 1rem;"></i>
+            <h3>Membership Expired</h3>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.5rem; max-width: 400px; margin-left: auto; margin-right: auto;">
+              Your subscription ended on {{ sub.end_date_formatted }}. Renew now or choose a Student/Couple offer!
+            </p>
+            <div style="margin-top: 1.5rem;">
+              <a href="{{ url_for('plans') }}" class="btn btn-primary">Renew Membership Now</a>
+            </div>
+          </div>
+
+        {% else %}
+          <!-- No Plan State -->
+          <div style="text-align: center; padding: 2.5rem 1rem;">
+            <i class="fa-solid fa-id-badge" style="font-size: 3rem; color: var(--accent-gold); margin-bottom: 1rem;"></i>
+            <h3>No Active Subscription</h3>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.5rem; max-width: 400px; margin-left: auto; margin-right: auto;">
+              Enroll into our Student Discount (₹799), Couple Duo (₹1,999), or Annual Titan pass to start your countdown!
+            </p>
+            <div style="margin-top: 1.5rem;">
+              <a href="{{ url_for('plans') }}" class="btn btn-primary">Explore Membership Plans</a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- 2. BMI Details & Health Metrics Card -->
+      <div class="glass-card" style="border: 1px solid var(--border-glow);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+          <h3 style="font-size: 1.35rem;"><i class="fa-solid fa-heart-pulse" style="color: var(--accent-red);"></i> BMI & Fitness Stats</h3>
+          <span class="badge {% if user.bmi_category == 'Normal Weight' %}badge-success{% elif user.bmi_category == 'Overweight' %}badge-warning{% else %}badge-danger{% endif %}">
+            {{ user.bmi_category or 'Pending' }}
+          </span>
+        </div>
+
+        <div style="text-align: center; background: rgba(10, 12, 16, 0.6); padding: 1.5rem; border-radius: 18px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800;">Your Current BMI Value</div>
+          <div style="font-size: 3.5rem; font-weight: 900; font-family: var(--font-heading); color: {% if user.bmi_category == 'Normal Weight' %}var(--accent-green){% elif user.bmi_category == 'Overweight' %}var(--accent-gold){% else %}var(--accent-red){% endif %}; line-height: 1; margin: 0.25rem 0;">
+            {{ user.bmi_value or '22.0' }}
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text-secondary);">
+            Computed by Oracle PL/SQL trigger <code>trg_users_calc_bmi</code>
+          </div>
+        </div>
+
+        <!-- 4 Health Pills -->
+        <div class="health-metrics-grid">
+          <div class="health-stat-pill">
+            <div class="health-stat-icon"><i class="fa-solid fa-ruler-vertical"></i></div>
+            <div class="health-stat-text">
+              <h4>{{ user.height_cm or 175 }} cm</h4>
+              <p>Height</p>
+            </div>
+          </div>
+
+          <div class="health-stat-pill">
+            <div class="health-stat-icon" style="color: var(--accent-gold); background: rgba(245, 158, 11, 0.15);"><i class="fa-solid fa-weight-scale"></i></div>
+            <div class="health-stat-text">
+              <h4>{{ user.weight_kg or 70 }} kg</h4>
+              <p>Current Weight</p>
+            </div>
+          </div>
+
+          <div class="health-stat-pill">
+            <div class="health-stat-icon" style="color: var(--accent-green); background: rgba(16, 185, 129, 0.15);"><i class="fa-solid fa-bullseye"></i></div>
+            <div class="health-stat-text">
+              <h4>{{ ideal_min_wt }} - {{ ideal_max_wt }} kg</h4>
+              <p>Ideal Weight</p>
+            </div>
+          </div>
+
+          <div class="health-stat-pill">
+            <div class="health-stat-icon" style="color: var(--accent-cyan); background: rgba(6, 182, 212, 0.15);"><i class="fa-solid fa-droplet"></i></div>
+            <div class="health-stat-text">
+              <h4>{{ water_liters }} L / day</h4>
+              <p>Target Hydration</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nutritional Advice based on BMI -->
+        <div style="margin-top: 1.5rem; padding: 1rem 1.25rem; background: rgba(255, 51, 68, 0.08); border-radius: 12px; border: 1px solid rgba(255, 51, 68, 0.2); font-size: 0.85rem; color: var(--text-secondary);">
+          <strong style="color: #fff;"><i class="fa-solid fa-dumbbell" style="color: var(--accent-red);"></i> Personalized Nutrition Target:</strong>
+          <div style="margin-top: 0.35rem;">
+            Estimated Daily Energy: <strong>{{ calorie_est }} kcal</strong>. Recommended Protein: <strong>{{ (user.weight_kg * 1.8)|round|int if user.weight_kg else 130 }}g/day</strong>.
+            Visit the shop to grab Whey Isolate or Creatine to accelerate gains.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Shop Purchases & Orders History ("and shop") -->
+    <div class="glass-card" style="margin-top: 2rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h3 style="font-size: 1.4rem;"><i class="fa-solid fa-bag-shopping" style="color: var(--accent-red);"></i> My Shop Orders & Supplements History</h3>
+          <p style="color: var(--text-secondary); font-size: 0.9rem;">Review your purchased gym proteins, shakers, and accessories.</p>
+        </div>
+        <a href="{{ url_for('shop') }}" class="btn btn-outline btn-sm">
+          <i class="fa-solid fa-plus"></i> Shop More Gear
+        </a>
+      </div>
+
+      {% if orders %}
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Date Placed</th>
+                <th>Items Ordered</th>
+                <th>Total Amount</th>
+                <th>Delivery Address</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for o in orders %}
+                <tr>
+                  <td><strong>#{{ o.id }}</strong></td>
+                  <td>{{ o.created_at[:16] if o.created_at else 'Recent' }}</td>
+                  <td>
+                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                      {% for item in o.items %}
+                        <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                          <img src="{{ item.image_url or '/static/images/default-avatar.png' }}" alt="Item" style="width: 26px; height: 26px; border-radius: 6px; object-fit: cover;">
+                          <span>{{ item.quantity }}x {{ item.product_name }}</span>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  </td>
+                  <td style="font-weight: 800; color: var(--accent-red);">₹{{ "{:,.0f}".format(o.total_amount) }}</td>
+                  <td style="font-size: 0.85rem; color: var(--text-secondary); max-width: 200px;">{{ o.shipping_address }}</td>
+                  <td>
+                    <span class="badge {% if o.order_status == 'DELIVERED' %}badge-success{% elif o.order_status == 'CANCELLED' %}badge-danger{% else %}badge-warning{% endif %}">
+                      {{ o.order_status }}
+                    </span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+          <i class="fa-solid fa-box-open" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+          <h4>No Supplement Orders Placed Yet</h4>
+          <p style="font-size: 0.9rem; margin-top: 0.25rem;">Stock up on Gold Standard Whey, C4 Pre-Workout, or Titan Shakers today.</p>
+          <a href="{{ url_for('shop') }}" class="btn btn-primary btn-sm" style="margin-top: 1.25rem;">
+            Visit 40+ Products Pro Store
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal-overlay" id="editProfileModal">
+  <div class="modal-content">
+    <button type="button" class="modal-close" onclick="closeModal('editProfileModal')"><i class="fa-solid fa-xmark"></i></button>
+    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-pen-to-square" style="color: var(--accent-red);"></i> Update Profile & Body Metrics</h3>
+    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">Updating your weight or height will automatically recalculate your BMI.</p>
+
+    <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-control" name="full_name" value="{{ user.full_name }}" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input type="tel" class="form-control" name="phone" value="{{ user.phone }}" required>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Height (CM)</label>
+          <input type="number" class="form-control" name="height_cm" value="{{ user.height_cm or 175 }}" step="0.5" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Weight (KG)</label>
+          <input type="number" class="form-control" name="weight_kg" value="{{ user.weight_kg or 70 }}" step="0.5" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Change Profile Picture</label>
+        <input type="file" class="form-control" name="photo" accept="image/*" style="padding: 0.5rem;">
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+        <i class="fa-solid fa-floppy-disk"></i> Save & Recalculate BMI
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    {% if sub.has_subscription and sub.is_active and sub.end_date_iso %}
+      initSubscriptionCountdown("{{ sub.end_date_iso }}");
+    {% endif %}
+  });
+</script>
+{% endblock %}
